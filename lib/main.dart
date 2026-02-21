@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'camera_screen.dart';
-import 'features/complaint/presentation/pages/camera_screen.dart'; 
-import 'core/theme/app_theme.dart'
+import 'package:cleansl_complaint_module/features/complaint/presentation/pages/camera_screen.dart';
+import 'package:cleansl_complaint_module/core/theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme
+      // theme: AppTheme.lightTheme
       home: const ComplaintScreen(),
     );
   }
