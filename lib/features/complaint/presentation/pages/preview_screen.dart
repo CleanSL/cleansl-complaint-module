@@ -99,7 +99,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
       // Replace with your live API URL once deployed
       var request = http.MultipartRequest(
           'POST',
-          Uri.parse('http://10.32.226.164:3000/complaints')
+          Uri.parse('https://cleansl-backend-supabase.onrender.com/complaints')
       );
 
       request.fields['prediction'] = _prediction!;
