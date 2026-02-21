@@ -32,5 +32,3 @@ flutter:
   assets:
     - assets/sorted_unsorted_model.tflite
 
-  uses-material-design: true
-
