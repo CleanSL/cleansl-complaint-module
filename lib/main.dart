@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'camera_screen.dart';
+import 'features/complaint/presentation/pages/camera_screen.dart'; 
+import 'core/theme/app_theme.dart'
 
 void main() {
   runApp(const MyApp());
@@ -10,9 +12,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ComplaintScreen(),
+      theme: AppTheme.lightTheme
+      home: const ComplaintScreen(),
     );
   }
 }
