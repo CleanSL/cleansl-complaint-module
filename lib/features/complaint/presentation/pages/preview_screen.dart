@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
-import 'lib\features\complaint\data\ml_service.dart';
+import 'lib/features/complaint/data/ml_service.dart';
 
 class PreviewScreen extends StatefulWidget {
   final String imagePath;
