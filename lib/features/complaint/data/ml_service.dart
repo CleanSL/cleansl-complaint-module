@@ -7,7 +7,7 @@ class MLService {
 
   Future<void> loadModel() async {
     _interpreter = await Interpreter.fromAsset(
-      'assets/sorted_unsorted_model.tflite',
+      'assets/models/sorted_unsorted_model.tflite',
     );
   }
 
