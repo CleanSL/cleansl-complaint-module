@@ -5,7 +5,6 @@ import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
 import 'package:cleansl_complaint_module/features/complaint/data/ml_service.dart';
 
-
 class PreviewScreen extends StatefulWidget {
   final String imagePath;
 
@@ -30,7 +29,10 @@ class _PreviewScreenState extends State<PreviewScreen> {
 
   // Helper to shrink image size before uploading to the cloud
   Future<XFile?> _compressImage(String path) async {
-    final targetPath = p.join(p.dirname(path), "compressed_${p.basename(path)}");
+    final targetPath = p.join(
+      p.dirname(path),
+      "compressed_${p.basename(path)}",
+    );
 
     return await FlutterImageCompress.compressAndGetFile(
       path,
@@ -51,31 +53,22 @@ class _PreviewScreenState extends State<PreviewScreen> {
     try {
       final ml = MLService();
       await ml.loadModel();
-      final double rawValue = await ml.predict(File(imagePath));
 
-      String label;
-      double certainty;
+      final result = await ml.predict(File(imagePath));
 
-      // Logic: Index 0 is Sorted, 1 is Unsorted (verify with your labels.txt)
-      if (rawValue > 0.5) {
-        label = "Unsorted";
-        certainty = rawValue;
-      } else {
-        label = "Sorted";
-        certainty = 1.0 - rawValue;
-      }
+      String label = result["label"];
+      double confidence = result["confidence"];
 
-      // Certainty threshold to catch "Out-of-Distribution" images (like your laptop)
-      const double threshold = 0.75;
+      const double threshold = 0.6; // adjust if needed
 
       setState(() {
-        if (certainty < threshold) {
-          _prediction = "Invalid / Unclear Image";
-          _confidence = certainty;
-          _isAnalyzed = false;
+        if (confidence < threshold) {
+          _prediction = "Unsorted (Mixed / Unclear)";
+          _confidence = confidence;
+          _isAnalyzed = true;
         } else {
-          _prediction = label;
-          _confidence = certainty;
+          _prediction = label.toUpperCase();
+          _confidence = confidence;
           _isAnalyzed = true;
         }
       });
@@ -98,8 +91,8 @@ class _PreviewScreenState extends State<PreviewScreen> {
 
       // Replace with your live API URL once deployed
       var request = http.MultipartRequest(
-          'POST',
-          Uri.parse('https://cleansl-backend-supabase.onrender.com/complaints')
+        'POST',
+        Uri.parse('https://cleansl-backend-supabase.onrender.com/complaints'),
       );
 
       request.fields['prediction'] = _prediction!;
@@ -109,7 +102,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
       request.fields['timestamp'] = DateTime.now().toIso8601String();
 
       request.files.add(
-          await http.MultipartFile.fromPath('image', compressedFile.path)
+        await http.MultipartFile.fromPath('image', compressedFile.path),
       );
 
       var response = await request.send();
@@ -122,7 +115,10 @@ class _PreviewScreenState extends State<PreviewScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to send: $e"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Failed to send: $e"),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -135,10 +131,13 @@ class _PreviewScreenState extends State<PreviewScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Submission Successful"),
-        content: const Text("Your complaint and AI analysis have been sent to the authorities."),
+        content: const Text(
+          "Your complaint and AI analysis have been sent to the authorities.",
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+            onPressed: () =>
+                Navigator.of(context).popUntil((route) => route.isFirst),
             child: const Text("OK"),
           ),
         ],
@@ -170,7 +169,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
             if (_isLoading) const CircularProgressIndicator(),
 
             // 2. Out-of-Distribution / Error UI
-            if (_prediction == "Invalid / Unclear Image")
+            if (_prediction == "Unsorted (Mixed / Unclear)")
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -180,12 +179,22 @@ class _PreviewScreenState extends State<PreviewScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 40),
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.orange,
+                      size: 40,
+                    ),
                     const Text(
                       "Image Not Recognized",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
-                    const Text("AI is unsure. Ensure the waste is visible and try again.", textAlign: TextAlign.center),
+                    const Text(
+                      "AI is unsure. Ensure the waste is visible and try again.",
+                      textAlign: TextAlign.center,
+                    ),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: const Text("GO BACK TO CAMERA"),
@@ -199,7 +208,9 @@ class _PreviewScreenState extends State<PreviewScreen> {
               Card(
                 elevation: 0,
                 color: Colors.grey[100],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -207,22 +218,22 @@ class _PreviewScreenState extends State<PreviewScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildResultColumn("Result", _prediction!,
-                              _prediction == "Sorted" ? Colors.green : Colors.red),
-                          _buildResultColumn("Confidence",
-                              "${(_confidence! * 100).toStringAsFixed(1)}%", Colors.black),
+                          _buildResultColumn(
+                            "Material",
+                            _prediction!,
+                            ["PLASTIC", "GLASS", "METAL", "PAPER", "ORGANIC"].contains(_prediction)
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                          if (_confidence != null)
+                            _buildResultColumn(
+                              "Confidence",
+                              "${(_confidence! * 100).toStringAsFixed(1)}%",
+                              Colors.blue,
+                            ),
                         ],
                       ),
                       const Divider(height: 30),
-                      TextButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _prediction = (_prediction == "Sorted") ? "Unsorted" : "Sorted";
-                          });
-                        },
-                        icon: const Icon(Icons.edit, size: 16),
-                        label: const Text("Not correct? Change result"),
-                      ),
                     ],
                   ),
                 ),
@@ -245,16 +256,23 @@ class _PreviewScreenState extends State<PreviewScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: _submitComplaint,
-                  child: const Text("SUBMIT COMPLAINT", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "SUBMIT COMPLAINT",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
 
             // 4. Initial Control Buttons
-            if (!_isAnalyzed && !_isLoading && _prediction != "Invalid / Unclear Image")
+            if (!_isAnalyzed &&
+                !_isLoading &&
+                _prediction != "Unsorted (Mixed / Unclear)")
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -280,7 +298,14 @@ class _PreviewScreenState extends State<PreviewScreen> {
     return Column(
       children: [
         Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: valueColor)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: valueColor,
+          ),
+        ),
       ],
     );
   }
