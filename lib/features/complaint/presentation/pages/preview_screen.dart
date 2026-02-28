@@ -148,122 +148,195 @@ class _PreviewScreenState extends State<PreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Complaint Details")),
+      backgroundColor: const Color(0xFF0B1C11),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            size: 20,
+            color: Colors.white,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "Complaint Details",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             // 1. Dynamic Image Preview
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                File(widget.imagePath),
-                height: _isAnalyzed ? 200 : 400,
-                width: double.infinity,
-                fit: BoxFit.cover,
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF26D15B).withOpacity(0.05),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.file(
+                  File(widget.imagePath),
+                  height: _isAnalyzed ? 240 : 450,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            if (_isLoading) const CircularProgressIndicator(),
+            if (_isLoading)
+              const CircularProgressIndicator(color: Color(0xFF26D15B)),
 
             // 2. Out-of-Distribution / Error UI
             if (_prediction == "Unsorted (Mixed / Unclear)")
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange),
+                  color: Colors.orange.shade900.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.orange.shade700, width: 1.5),
                 ),
                 child: Column(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.warning_amber_rounded,
-                      color: Colors.orange,
-                      size: 40,
+                      color: Colors.orange.shade400,
+                      size: 48,
                     ),
+                    const SizedBox(height: 12),
                     const Text(
                       "Image Not Recognized",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
+                        color: Colors.white,
                       ),
                     ),
-                    const Text(
+                    const SizedBox(height: 8),
+                    Text(
                       "AI is unsure. Ensure the waste is visible and try again.",
                       textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
                     ),
+                    const SizedBox(height: 16),
                     TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.orange.shade300,
+                      ),
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("GO BACK TO CAMERA"),
+                      child: const Text(
+                        "GO BACK TO CAMERA",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
               ),
 
             // 3. Analysis Results & Submission Form
-            if (_isAnalyzed) ...[
-              Card(
-                elevation: 0,
-                color: Colors.grey[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            if (_isAnalyzed && _prediction != "Unsorted (Mixed / Unclear)") ...[
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF102616),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF1A3A22),
+                    width: 1.5,
+                  ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildResultColumn(
-                            "Material",
-                            _prediction!,
-                            ["PLASTIC", "GLASS", "METAL", "PAPER", "ORGANIC"].contains(_prediction)
-                                ? Colors.green
-                                : Colors.red,
-                          ),
-                          if (_confidence != null)
-                            _buildResultColumn(
-                              "Confidence",
-                              "${(_confidence! * 100).toStringAsFixed(1)}%",
-                              Colors.blue,
-                            ),
-                        ],
+                      _buildResultColumn(
+                        "Material",
+                        _prediction!,
+                        [
+                              "PLASTIC",
+                              "GLASS",
+                              "METAL",
+                              "PAPER",
+                              "ORGANIC",
+                            ].contains(_prediction)
+                            ? const Color(0xFF26D15B)
+                            : Colors.redAccent,
                       ),
-                      const Divider(height: 30),
+                      if (_confidence != null)
+                        _buildResultColumn(
+                          "Confidence",
+                          "${(_confidence! * 100).toStringAsFixed(1)}%",
+                          const Color(0xFF4BA3E3),
+                        ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
               TextField(
                 controller: _detailsController,
-                maxLines: 3,
-                decoration: const InputDecoration(
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
                   labelText: "Explain your complaint",
+                  labelStyle: TextStyle(color: Colors.grey.shade400),
                   hintText: "e.g. Garbage missed for 3 days...",
-                  border: OutlineInputBorder(),
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                  filled: true,
+                  fillColor: const Color(0xFF151E18),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF28362B)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF28362B)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF26D15B)),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
-                height: 55,
+                height: 56,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF26D15B),
+                    foregroundColor: const Color(0xFF0B1C11),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   onPressed: _submitComplaint,
                   child: const Text(
                     "SUBMIT COMPLAINT",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
@@ -273,20 +346,56 @@ class _PreviewScreenState extends State<PreviewScreen> {
             if (!_isAnalyzed &&
                 !_isLoading &&
                 _prediction != "Unsorted (Mixed / Unclear)")
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text("Retake"),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () => _runModel(widget.imagePath),
-                    icon: const Icon(Icons.analytics),
-                    label: const Text("Analyze & Confirm"),
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: SizedBox(
+                        height: 56,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(
+                              color: Color(0xFF28362B),
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.refresh, size: 20),
+                          label: const Text("Retake"),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: 56,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF26D15B),
+                            foregroundColor: const Color(0xFF0B1C11),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: () => _runModel(widget.imagePath),
+                          icon: const Icon(Icons.analytics, size: 20),
+                          label: const Text(
+                            "Analyze Image",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
           ],
         ),
@@ -297,13 +406,22 @@ class _PreviewScreenState extends State<PreviewScreen> {
   Widget _buildResultColumn(String label, String value, Color valueColor) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: 13,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 4),
         Text(
           value,
           style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
             color: valueColor,
+            letterSpacing: -0.5,
           ),
         ),
       ],
